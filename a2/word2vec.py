@@ -18,7 +18,7 @@ def sigmoid(x):
     """
 
     ### YOUR CODE HERE (~1 Line)
-
+    s = 1 / (1 + np.exp(-x))
     ### END YOUR CODE
 
     return s
@@ -63,7 +63,13 @@ def naiveSoftmaxLossAndGradient(
 
     ### Please use the provided softmax function (imported earlier in this file)
     ### This numerically stable implementation helps you avoid issues pertaining
-    ### to integer overflow. 
+    ### to integer overflow.
+    
+    predictions = softmax(np.dot(outsideVectors, centerWordVec))
+    loss = -np.log(predictions[outsideWordIdx])
+    gradCenterVec = -outsideVectors[outsideWordIdx] + np.dot(outsideVectors.T, predictions)
+    gradOutsideVecs = np.outer(predictions.T, centerWordVec)
+    gradOutsideVecs[outsideWordIdx] -= centerWordVec
 
     ### END YOUR CODE
 
@@ -109,7 +115,17 @@ def negSamplingLossAndGradient(
     indices = [outsideWordIdx] + negSampleWordIndices
 
     ### YOUR CODE HERE (~10 Lines)
+    negSampleWordSigmoid = sigmoid(-np.dot(outsideVectors[negSampleWordIndices], centerWordVec))
+    outsideWordSigmoid = sigmoid(np.dot(outsideVectors[outsideWordIdx], centerWordVec))
+    loss = -np.log(negSampleWordSigmoid).sum()
+    loss -= np.log(outsideWordSigmoid)
+    gradCenterVec = -(1 - outsideWordSigmoid)*outsideVectors[outsideWordIdx]
+    gradCenterVec += (outsideVectors[negSampleWordIndices]*(1-negSampleWordSigmoid)[:, None]).sum(axis=0)
 
+    mask = np.zeros((outsideVectors.shape[0], K))
+    mask[negSampleWordIndices, np.arange(K)] = 1
+    gradOutsideVecs = np.tile(centerWordVec, (outsideVectors.shape[0], 1))*np.dot(mask, 1-negSampleWordSigmoid)[:, None]
+    gradOutsideVecs[outsideWordIdx] -= centerWordVec*(1-outsideWordSigmoid)
     ### Please use your implementation of sigmoid in here.
 
     ### END YOUR CODE
@@ -144,9 +160,10 @@ def skipgram(currentCenterWord, windowSize, outsideWords, word2Ind,
     Return:
     loss -- the loss function value for the skip-gram model
             (J in the pdf handout)
-    gradCenterVec -- the gradient with respect to the center word vector
-                     in shape (word vector length, )
-                     (dJ / dv_c in the pdf handout)
+    gradCenterVecs -- the gradient with respect to the center word vector
+                     in shape (num words in vocab, word vector length) where
+                     only the row for the currentCenterWord is non-zero
+                     (dJ / dV in the pdf handout)
     gradOutsideVecs -- the gradient with respect to all the outside word vectors
                     in shape (num words in vocab, word vector length) 
                     (dJ / dU)
@@ -157,6 +174,15 @@ def skipgram(currentCenterWord, windowSize, outsideWords, word2Ind,
     gradOutsideVectors = np.zeros(outsideVectors.shape)
 
     ### YOUR CODE HERE (~8 Lines)
+    centerWordIdx = word2Ind[currentCenterWord]
+    centerWordVec = centerWordVectors[centerWordIdx]
+
+    for outsideWord in outsideWords:
+        outsideWordIdx = word2Ind[outsideWord]
+        loss_, gradCenterVec_, gradOutsideVecs_ = word2vecLossAndGradient(centerWordVec, outsideWordIdx, outsideVectors, dataset)
+        loss += loss_
+        gradCenterVecs[centerWordIdx] += gradCenterVec_
+        gradOutsideVectors += gradOutsideVecs_
 
     ### END YOUR CODE
     
