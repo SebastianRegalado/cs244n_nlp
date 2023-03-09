@@ -172,7 +172,7 @@ class CharCorruptionDataset(Dataset):
         start = random.randrange(0, max(1, len(document) - truncated_length))
         document = document[start:start+truncated_length]
         avg_mask_len = len(document) / 4
-        mask_len = random.randrange(1, max(1, int(avg_mask_len*2)))
+        mask_len = random.randrange(1, max(2, int(avg_mask_len*2)))
         mask_start = random.randrange(0, max(1, len(document) - mask_len))
         prefix, mask_content, suffix = document[:mask_start], document[mask_start:mask_start+mask_len], document[mask_start+mask_len:]
 
