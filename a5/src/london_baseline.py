@@ -15,4 +15,7 @@ with open(args.eval_corpus_path) as fin:
 nlines = len(lines)
 total, correct = utils.evaluate_places(args.eval_corpus_path, ["London"]*nlines)
 
+print("Baseline: Predicting 'London' for every example")
+print("Total examples: {}".format(total))
+print("Correct predictions: {}".format(correct))
 print("Accuracy: {:.2f}%".format(100*correct/total))
