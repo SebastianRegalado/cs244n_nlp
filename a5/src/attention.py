@@ -63,8 +63,8 @@ class SynthesizerAttention(nn.Module):
         # NEW learnable weights
         self.w1 = nn.Linear(config.n_embd, config.n_embd)
         self.w2 = nn.Parameter(torch.zeros(config.n_embd // config.n_head,
-            config.block_size-1))
-        self.b2 = nn.Parameter(torch.zeros(config.block_size-1))
+            config.block_size))
+        self.b2 = nn.Parameter(torch.zeros(config.block_size))
         # value projection
         self.value = nn.Linear(config.n_embd, config.n_embd)
         # regularization
